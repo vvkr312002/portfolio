@@ -1000,15 +1000,20 @@ body.agent-open #agent-panel{display:flex}
    - Falls back to demo mode if backend is unreachable.
    ===================================================================== */
 
+/* ---------------------------------------------------------------
+   AGENT BACKEND URL  ← edit this ONE line after you deploy the
+   agent/ folder to Render / Railway / Fly.io.
+   Example: 'https://vamsi-portfolio-agent.onrender.com'
+   --------------------------------------------------------------- */
+const AGENT_API_PROD = 'https://vamsi312002-portfolio.hf.space';   // ← paste your deployed backend URL here
+const AGENT_API_DEV  = 'http://localhost:8000';
+
 const AGENT_API = (() => {
-  // If we're being served from the same host as the agent, use relative.
-  // Otherwise default to localhost:8000.
   const host = window.location.hostname;
-  if (host && host !== 'localhost' && host !== '127.0.0.1' && window.location.protocol !== 'file:') {
-    // Production: same origin + /api
-    return window.location.origin;
-  }
-  return 'http://localhost:8000';
+  const isLocal = host === 'localhost' || host === '127.0.0.1' || window.location.protocol === 'file:';
+  if (isLocal) return AGENT_API_DEV;
+  // In production: use AGENT_API_PROD if set, else fall back to same origin (won't work unless you proxied /api to your backend).
+  return AGENT_API_PROD || window.location.origin;
 })();
 
 const $launcher = document.getElementById('agent-launcher');
