@@ -114,6 +114,31 @@ h1.hero .accent{background:linear-gradient(135deg,#fff 0%,#b7aaff 35%,#7c5cff 60
 .scroll-hint .line{width:1px;height:48px;background:linear-gradient(180deg,var(--accent),transparent);animation:scrollLine 2s ease-in-out infinite}
 @keyframes scrollLine{0%,100%{transform:scaleY(.4);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}}
 
+/* -------- HERO PROMPT BAR (agent-as-hero) -------- */
+.hero-prompt{margin-top:38px;width:100%;max-width:720px;position:relative;z-index:2}
+.hero-prompt-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#b7aaff;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.hero-prompt-label .dot{width:7px;height:7px;border-radius:50%;background:#22ff9f;box-shadow:0 0 10px #22ff9f;animation:pulse 2s infinite;flex-shrink:0}
+.hero-prompt-input{position:relative;display:flex;align-items:center;background:rgba(10,11,18,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:8px;transition:border-color .3s,box-shadow .3s}
+.hero-prompt-input::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,rgba(124,92,255,.55),transparent 40%,transparent 60%,rgba(34,211,238,.55));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:.7;transition:opacity .3s}
+.hero-prompt-input:focus-within::before{opacity:1}
+.hero-prompt-input:focus-within{border-color:rgba(124,92,255,.5);box-shadow:0 0 0 4px rgba(124,92,255,.12)}
+.hero-prompt-input input{flex:1;background:transparent;border:0;outline:none;color:#e9eaf0;font-family:'Inter',sans-serif;font-size:17px;padding:14px 16px;letter-spacing:-.005em;min-width:0}
+.hero-prompt-input input::placeholder{color:#6b7080}
+.hero-prompt-send{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#7c5cff,#22d3ee);color:#0b0d14;display:grid;place-items:center;flex-shrink:0;transition:transform .2s ease}
+.hero-prompt-send:hover{transform:translateY(-1px) scale(1.02)}
+.hero-prompt-send svg{width:18px;height:18px}
+.hero-prompt-chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.hero-prompt-chips .seed{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.03);border:1px solid var(--line);color:#c8ccda;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;transition:all .25s ease;cursor:pointer}
+.hero-prompt-chips .seed:hover{background:rgba(124,92,255,.12);border-color:rgba(124,92,255,.4);color:#fff;transform:translateY(-1px)}
+.hero-sec{margin-top:30px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.hero-sec .link-arrow{color:var(--muted);display:inline-flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid transparent;transition:border-color .25s,color .25s;cursor:pointer}
+.hero-sec .link-arrow:hover{color:#e9eaf0;border-bottom-color:var(--accent)}
+@media (max-width:768px){
+  .hero-prompt-input input{font-size:15px;padding:12px 14px}
+  .hero-prompt-send{width:42px;height:42px}
+  .hero-prompt-chips .seed{font-size:10px;padding:7px 11px}
+}
+
 /* -------- MARQUEE -------- */
 .marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:22px 0;overflow:hidden;position:relative;white-space:nowrap;background:rgba(255,255,255,.015)}
 .marquee .track{display:inline-flex;gap:48px;animation:mq 40s linear infinite;font-family:'Space Grotesk',sans-serif;font-size:clamp(20px,2.4vw,34px);font-weight:500;letter-spacing:-.02em;color:#8a8fa3}
@@ -249,30 +274,40 @@ footer .status .live{width:6px;height:6px;border-radius:50%;background:#22ff9f;b
   <div class="scrim"></div>
 
   <div class="hero-meta fade-in">
-    <div class="chip"><span class="live"></span> Available · Summer & Full-time 2026</div>
-    <div class="chip">Richardson, TX · Open to relocate</div>
+    <div class="chip"><span class="live"></span> Open to AI/ML roles · May 2026</div>
     <div class="chip">MS CS · UT Dallas</div>
   </div>
 
   <h1 class="hero">
-    <span class="line"><span>Building</span></span>
-    <span class="line"><span>intelligent&nbsp;systems</span></span>
-    <span class="line"><span>with <em class="accent">language models</em>.</span></span>
+    <span class="line"><span>Don't read my</span></span>
+    <span class="line"><span>resume. <em class="accent">Ask it.</em></span></span>
   </h1>
 
   <p class="hero-sub fade-in">
-    I'm <b style="color:#fff">Vamsi Krishna Reddy Vemuri</b> — an AI/ML engineer designing production-grade GenAI systems. I work across the full stack of modern ML: RAG pipelines, parameter-efficient LLM fine-tuning, vector retrieval, and the data plumbing that makes any of it reliable in production.
+    I'm <b style="color:#fff">Vamsi Krishna Reddy Vemuri</b>, an AI/ML engineer focused on LLMs, RAG, and production ML. Instead of another scrollable resume, I built a LangGraph multi-agent system trained on my work — ask it about my experience, projects, or how to reach me.
   </p>
 
-  <div class="hero-role fade-in">
-    <span>Currently building →</span>
-    <span class="rotator" id="rotator">RAG pipelines</span>
+  <div class="hero-prompt fade-in">
+    <div class="hero-prompt-label">
+      <span class="dot"></span>
+      <span>LangGraph · GPT-4o-mini · FAISS RAG over my resume</span>
+    </div>
+    <form class="hero-prompt-input" id="hero-prompt-form" autocomplete="off">
+      <input type="text" id="hero-prompt-text" placeholder="Ask me anything about Vamsi's work…" aria-label="Ask the AI agent">
+      <button type="submit" class="hero-prompt-send" aria-label="Ask">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </button>
+    </form>
+    <div class="hero-prompt-chips">
+      <button class="seed" type="button" data-seed="Walk me through your PEFT fine-tuning project.">PEFT project</button>
+      <button class="seed" type="button" data-seed="What's your RAG and LLM fine-tuning experience?">RAG + fine-tuning</button>
+      <button class="seed" type="button" data-seed="Show me your biggest quantified results.">Impact metrics</button>
+      <button class="seed" type="button" data-seed="How can I contact Vamsi and what roles is he open to?">Contact</button>
+    </div>
   </div>
 
-  <div class="hero-cta fade-in">
-    <a class="btn primary" href="#work" data-magnetic><span>See selected work <span class="arrow">→</span></span></a>
-    <a class="btn ghost" href="#contact" data-magnetic>Get in touch</a>
-    <a class="btn ghost" href="mailto:vxv240000@utdallas.edu" data-magnetic>vxv240000@utdallas.edu</a>
+  <div class="hero-sec fade-in">
+    <a href="#work" class="link-arrow" data-magnetic>Or skip the chat — see the work ↓</a>
   </div>
 
   <div class="scroll-hint">
@@ -788,9 +823,10 @@ window.addEventListener('load', ()=>{
   },90);
 });
 
-/* -------- ROTATOR -------- */
+/* -------- ROTATOR (legacy — element removed from hero, keep as no-op) -------- */
 (function(){
   const el = document.getElementById('rotator');
+  if (!el) return;
   const items = ['RAG pipelines','LoRA fine-tuning','FAISS retrieval','evaluation frameworks','LLM agents','production ML'];
   let i = 0;
   function tick(){
@@ -1224,16 +1260,20 @@ async function send(text) {
       }
     }
     if (!gotFirstToken) { typing.remove(); bubble.style.display = ''; bubble.innerHTML = '<em>No response.</em>'; }
-  } catch (e) {
-    // Network blew up mid-session — fallback to demo
-    typing.remove(); bubble.style.display = '';
-    backendOnline = false;
-    $status.textContent = 'Demo mode · Backend offline';
-    $live.classList.add('off');
-    showOfflineBanner();
-    await demoStream(text, contentEl, bubble, null, (t) => { buffer = t; });
+    } catch (e) {
+    console.error('Chat stream error:', e);
+
+    typing?.remove();
+    bubble.style.display = '';
+
+    if (buffer && buffer.trim()) {
+      bubble.innerHTML = renderMarkdown(buffer);
+    } else {
+      bubble.innerHTML = '<em style="color:#ffc9e0">Sorry — the response stream was interrupted. Please try again.</em>';
+    }
+  } finally {
+    finish();
   }
-  finish();
 }
 
 /* -- Demo fallback responses -------------------------------------------- */
@@ -1306,6 +1346,43 @@ $suggest.addEventListener('click', (e) => {
   const btn = e.target.closest('.q');
   if (btn) send(btn.dataset.q);
 });
+
+/* -- HERO prompt bar → opens the agent panel and asks the question ----- */
+(function(){
+  const $heroForm  = document.getElementById('hero-prompt-form');
+  const $heroText  = document.getElementById('hero-prompt-text');
+  const $heroChips = document.querySelectorAll('.hero-prompt-chips .seed');
+
+  function openPanelIfNeeded(){
+    if (!document.body.classList.contains('agent-open')) {
+      document.body.classList.add('agent-open');
+      if (history.length === 0) {
+        addAssistantMessage("👋 Hey — I'm Vamsi's AI agent. I can tell you about his experience, deep-dive into his projects, or help you reach him. What would you like to know?");
+      }
+      probeBackend();
+    }
+  }
+
+  function seedAndAsk(text){
+    const q = (text || '').trim();
+    if (!q) return;
+    openPanelIfNeeded();
+    // Give the panel a frame to render before we dispatch the question.
+    requestAnimationFrame(() => {
+      $input.value = '';
+      send(q);
+    });
+  }
+
+  $heroForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    seedAndAsk($heroText.value);
+    $heroText.value = '';
+  });
+  $heroChips.forEach(btn => {
+    btn.addEventListener('click', () => seedAndAsk(btn.dataset.seed));
+  });
+})();
 </script>
 
 </body>
