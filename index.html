@@ -1213,17 +1213,56 @@ async function send(text) {
   }
 
   // Real backend: POST JSON and parse SSE from the response body
+  let lastErrorMsg = null;
+  const eventsSeen = [];
   try {
     const resp = await fetch(AGENT_API + '/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text, history: history.slice(0, -1) })
     });
-    if (!resp.ok || !resp.body) throw new Error('bad response');
+    console.log('[agent] fetch status', resp.status, 'content-type', resp.headers.get('content-type'));
+    if (!resp.ok || !resp.body) throw new Error('bad response (status=' + resp.status + ')');
 
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let pending = '';
+
+    const processPart = (part) => {
+      // SSE payload may have multiple "data:" lines folded; grab them all
+      const dataLines = part.split('\n').filter(l => l.startsWith('data:')).map(l => l.slice(5).trim());
+      if (!dataLines.length) return;
+      const payload = dataLines.join('\n');
+      let evt;
+      try { evt = JSON.parse(payload); } catch (err) {
+        console.warn('[agent] bad JSON in SSE part', payload, err);
+        return;
+      }
+      eventsSeen.push(evt.type);
+      console.log('[agent] event', evt);
+
+      if (evt.type === 'route') {
+        $route.style.display = 'inline-flex';
+        $route.textContent = 'Routed → ' + evt.node;
+        $route.classList.add('route');
+      } else if (evt.type === 'tool_start') {
+        addToolChip(contentEl, evt.name);
+      } else if (evt.type === 'tool_end') {
+        markToolDone(contentEl, evt.name);
+      } else if (evt.type === 'token') {
+        if (!gotFirstToken) {
+          typing.remove(); bubble.style.display = '';
+          gotFirstToken = true;
+        }
+        buffer += evt.text;
+        bubble.innerHTML = renderMarkdown(buffer);
+        $msgs.scrollTop = $msgs.scrollHeight;
+      } else if (evt.type === 'error') {
+        lastErrorMsg = evt.message || 'unknown error';
+        if (!gotFirstToken) { typing.remove(); bubble.style.display = ''; gotFirstToken = true; }
+        bubble.innerHTML = `<em style="color:#ffc9e0">Error: ${lastErrorMsg}</em>`;
+      }
+    };
 
     while (true) {
       const { done, value } = await reader.read();
@@ -1231,37 +1270,23 @@ async function send(text) {
       pending += decoder.decode(value, { stream: true });
       const parts = pending.split('\n\n');
       pending = parts.pop();
-      for (const part of parts) {
-        const line = part.split('\n').find(l => l.startsWith('data:'));
-        if (!line) continue;
-        let evt;
-        try { evt = JSON.parse(line.slice(5).trim()); } catch { continue; }
+      for (const part of parts) processPart(part);
+    }
+    // Flush any final buffered part (server may omit the trailing \n\n)
+    pending += decoder.decode();
+    if (pending.trim()) processPart(pending);
 
-        if (evt.type === 'route') {
-          $route.style.display = 'inline-flex';
-          $route.textContent = 'Routed → ' + evt.node;
-          $route.classList.add('route');
-        } else if (evt.type === 'tool_start') {
-          addToolChip(contentEl, evt.name);
-        } else if (evt.type === 'tool_end') {
-          markToolDone(contentEl, evt.name);
-        } else if (evt.type === 'token') {
-          if (!gotFirstToken) {
-            typing.remove(); bubble.style.display = '';
-            gotFirstToken = true;
-          }
-          buffer += evt.text;
-          bubble.innerHTML = renderMarkdown(buffer);
-          $msgs.scrollTop = $msgs.scrollHeight;
-        } else if (evt.type === 'error') {
-          typing.remove(); bubble.style.display = '';
-          bubble.innerHTML = `<em style="color:#ffc9e0">Error: ${evt.message}</em>`;
-        }
+    console.log('[agent] stream ended. events seen:', eventsSeen);
+    if (!gotFirstToken) {
+      typing.remove(); bubble.style.display = '';
+      if (lastErrorMsg) {
+        bubble.innerHTML = `<em style="color:#ffc9e0">Error: ${lastErrorMsg}</em>`;
+      } else {
+        bubble.innerHTML = '<em style="color:#ffc9e0">No response. Events seen: ' + (eventsSeen.join(', ') || '(none)') + '. Check browser console for details.</em>';
       }
     }
-    if (!gotFirstToken) { typing.remove(); bubble.style.display = ''; bubble.innerHTML = '<em>No response.</em>'; }
     } catch (e) {
-    console.error('Chat stream error:', e);
+    console.error('[agent] chat stream error:', e);
 
     typing?.remove();
     bubble.style.display = '';
@@ -1269,7 +1294,7 @@ async function send(text) {
     if (buffer && buffer.trim()) {
       bubble.innerHTML = renderMarkdown(buffer);
     } else {
-      bubble.innerHTML = '<em style="color:#ffc9e0">Sorry — the response stream was interrupted. Please try again.</em>';
+      bubble.innerHTML = `<em style="color:#ffc9e0">Network error: ${e.message}. Open browser console (F12) for details.</em>`;
     }
   } finally {
     finish();
